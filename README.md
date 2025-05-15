@@ -1,6 +1,6 @@
 # Grafana Monitoring Stack for Ubuntu Server
 
-![Monitoring Stack](https://i.imgur.com/JZkQlz9.png)
+![Monitoring Stack](https://github.com/user-attachments/assets/5e60f931-1123-4115-9278-49d9e500017e)
 
 ## Overview
 
