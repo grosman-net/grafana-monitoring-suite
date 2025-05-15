@@ -1,36 +1,25 @@
-# Grafana Monitoring Suite for Ubuntu Server
+# Grafana Monitoring Stack for Ubuntu Server
 
-![Grafana Logo](https://grafana.com/static/img/menu/grafana2.svg)
+![Monitoring Stack](https://i.imgur.com/JZkQlz9.png)
 
 ## Overview
 
-Grafana Monitoring Suite is an automated solution for deploying a complete monitoring system on Ubuntu Server. The package includes:
+Complete monitoring solution with:
+- **Grafana** - Metrics visualization (port 3000)
+- **Prometheus** - Metrics collection (port 9090)
+- **Node Exporter** - System metrics (port 9100)
+- **cAdvisor** - Container metrics (port 8080)
 
-- **Grafana** - Metrics visualization platform
-- **Prometheus** - Metrics collection and storage system
-- **Node Exporter** - System metrics collector
-- **cAdvisor** - Container monitoring tool
+All components run in Docker containers with persistent storage.
 
-All components run in isolated Docker containers.
-
-## Key Features
-
-✅ Fully automated installation  
-✅ Isolated Docker containers  
-✅ Comprehensive system and container monitoring  
-✅ Pre-configured dashboards  
-✅ Simple menu-driven management  
-✅ Complete cleanup capability  
-
-## System Requirements
+## Prerequisites
 
 - Ubuntu Server 20.04/22.04
-- Minimum 2GB RAM
-- Minimum 10GB disk space
-- Internet access
-- Docker (will be installed automatically if missing)
+- Docker and Docker Compose (will be installed automatically)
+- 2+ GB RAM
+- 10+ GB disk space
 
-## Installation
+## Quick Start
 
 1. Clone the repository:
 ```bash
@@ -48,89 +37,112 @@ chmod +x installer.sh remove.sh
 ./installer.sh
 ```
 
-## Usage
-
-### Main Menu Options
-
-1. **Full Deploy** - Installs all components automatically
-2. **Cleanup** - Removes all containers and frees ports
-3. **Port Check** - Displays current port usage
-4. **Exit** - Quits the installer
-
-### Accessing Services
+## Access Services
 
 After installation, access the services at:
 
-- **Grafana**: `http://<your-server-ip>:3000` (admin/admin)
-- **Prometheus**: `http://<your-server-ip>:9090`
-- **Node Metrics**: `http://<your-server-ip>:9100/metrics`
-- **cAdvisor**: `http://<your-server-ip>:8080`
+| Service       | URL                                  | Credentials       |
+|---------------|--------------------------------------|-------------------|
+| Grafana       | http://<server-ip>:3000             | admin/admin       |
+| Prometheus    | http://<server-ip>:9090             | -                 |
+| Node Exporter | http://<server-ip>:9100/metrics     | -                 |
+| cAdvisor      | http://<server-ip>:8080             | -                 |
 
-### Removal
+## Management
 
-To completely remove all components:
+### Start/Stop Services
+```bash
+docker-compose start   # Start all services
+docker-compose stop    # Stop all services
+```
+
+### Check Status
+```bash
+docker-compose ps
+```
+
+### View Logs
+```bash
+docker-compose logs -f [service]  # service = grafana/prometheus/node-exporter/cadvisor
+```
+
+## Removal
+
+To completely remove the monitoring stack:
+
 ```bash
 ./remove.sh
 ```
-You will need to confirm removal by typing: "I understand I will lose all data"
 
-## Included Components
+This will:
+- Stop and remove all containers
+- Remove Docker volumes
+- Cleanup configuration files
+- Preserve docker-compose.yml for future use
 
-### Grafana
-- Pre-configured with Prometheus datasource
-- Sample dashboards for system monitoring
-- Persistent storage for configurations
+## Configuration Files
 
-### Prometheus
-- Pre-configured to scrape:
-  - Node Exporter (system metrics)
-  - cAdvisor (container metrics)
-  - Itself (Prometheus metrics)
-- Data retention: 15 days
-
-### Node Exporter
-- Collects comprehensive system metrics:
-  - CPU, memory, disk usage
-  - Network statistics
-  - System load averages
-
-### cAdvisor
-- Container resource usage monitoring
-- Performance characteristics
-- Historical resource usage
+| File                   | Description                          |
+|------------------------|--------------------------------------|
+| `docker-compose.yml`   | Container configuration              |
+| `config/prometheus.yml`| Prometheus scrape targets            |
 
 ## Troubleshooting
 
-### Port Conflicts
-If you encounter port conflicts:
-1. Run the cleanup option
-2. Manually verify no processes are using the ports:
+### Common Issues
+
+1. **Port conflicts**:
+   ```bash
+   ./installer.sh --check
+   ```
+
+2. **Failed container starts**:
+   ```bash
+   docker logs <container-name>
+   ```
+
+3. **Reset Grafana admin password**:
+   ```bash
+   docker exec -it grafana grafana-cli admin reset-admin-password newpassword
+   ```
+
+### Reinstalling
+
+1. First remove the stack:
+   ```bash
+   ./remove.sh
+   ```
+
+2. Clean Docker system:
+   ```bash
+   docker system prune -f
+   ```
+
+3. Reinstall:
+   ```bash
+   ./installer.sh
+   ```
+
+## Backup and Restore
+
+### Backup Data
 ```bash
-for port in 3000 9090 9100 8080; do
-  sudo lsof -i :$port || echo "Port $port is free"
-done
+# Backup Grafana
+docker run --rm --volumes-from grafana -v $(pwd):/backup ubuntu tar cvf /backup/grafana-backup.tar /var/lib/grafana
+
+# Backup Prometheus
+docker run --rm --volumes-from prometheus -v $(pwd):/backup ubuntu tar cvf /backup/prometheus-backup.tar /prometheus
 ```
 
-### Service Failures
-If any service fails to start:
+### Restore Data
 ```bash
-# Check container logs
-docker-compose logs
+# Restore Grafana
+docker run --rm --volumes-from grafana -v $(pwd):/backup ubuntu bash -c "cd / && tar xvf /backup/grafana-backup.tar"
 
-# Verify running containers
-docker ps -a
+# Restore Prometheus
+docker run --rm --volumes-from prometheus -v $(pwd):/backup ubuntu bash -c "cd / && tar xvf /backup/prometheus-backup.tar"
 ```
-
-## Security Notes
-
-- Default Grafana credentials: admin/admin (change immediately after installation)
-- Exposed ports should be protected by firewall
-- Consider setting up HTTPS reverse proxy for production use
-
-## Support
-
-For issues or feature requests, please open an issue on our [GitHub repository](https://github.com/your-repo/grafana-monitoring-suite).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](LICENSE) for details.
