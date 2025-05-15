@@ -1,0 +1,5 @@
+# Installation tracking
+install_dir=/projects/grafana-monitoring-suite
+timestamp=1747339228
+installed_images=prom/prometheus grafana/grafana prom/node-exporter gcr.io/cadvisor/cadvisor
+installation_success=true

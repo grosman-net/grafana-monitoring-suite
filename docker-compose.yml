@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Prometheus
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -12,12 +11,10 @@ services:
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
     restart: unless-stopped
     networks:
       - monitoring
 
-  # Grafana
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -25,7 +22,6 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./config/grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     restart: unless-stopped
@@ -34,22 +30,19 @@ services:
     depends_on:
       - prometheus
 
-  # Node Exporter (для сбора метрик хоста)
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
-    command:
-      - '--path.rootfs=/host'
-    pid: host
+    ports:
+      - "9100:9100"
     restart: unless-stopped
-    volumes:
-      - /:/host:ro,rslave
     networks:
       - monitoring
-    deploy:
-      mode: global
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - '--path.rootfs=/host'
 
-  # cAdvisor (для мониторинга контейнеров)
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
@@ -66,7 +59,9 @@ services:
 
 volumes:
   prometheus_data:
+    driver: local
   grafana_data:
+    driver: local
 
 networks:
   monitoring:
