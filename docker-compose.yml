@@ -1,30 +1,73 @@
-version: '3'
+version: '3.8'
 
 services:
+  # Prometheus
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     container_name: prometheus
     ports:
       - "9090:9090"
     volumes:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
     restart: unless-stopped
+    networks:
+      - monitoring
 
+  # Grafana
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:latest
     container_name: grafana
     ports:
       - "3000:3000"
     volumes:
-      - grafana-storage:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
 
+  # Node Exporter (для сбора метрик хоста)
   node-exporter:
-    image: prom/node-exporter
+    image: prom/node-exporter:latest
     container_name: node-exporter
-    ports:
-      - "9100:9100"
+    command:
+      - '--path.rootfs=/host'
+    pid: host
     restart: unless-stopped
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - monitoring
+    deploy:
+      mode: global
+
+  # cAdvisor (для мониторинга контейнеров)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: unless-stopped
+    networks:
+      - monitoring
 
 volumes:
-  grafana-storage:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  monitoring:
+    driver: bridge
