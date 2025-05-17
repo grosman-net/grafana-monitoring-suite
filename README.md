@@ -23,7 +23,7 @@ All components run in Docker containers with persistent storage.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-repo/grafana-monitoring-suite.git
+git clone https://github.com/grosman-net/grafana-monitoring-suite.git
 cd grafana-monitoring-suite
 ```
 
