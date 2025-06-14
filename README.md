@@ -29,12 +29,12 @@ cd grafana-monitoring-suite
 
 2. Make scripts executable:
 ```bash
-chmod +x installer.sh remove.sh
+chmod +x install.sh remove.sh
 ```
 
 3. Run the installer:
 ```bash
-./installer.sh
+./install.sh
 ```
 
 ## Access Services
@@ -93,7 +93,7 @@ This will:
 
 1. **Port conflicts**:
    ```bash
-   ./installer.sh --check
+   ./install.sh --check
    ```
 
 2. **Failed container starts**:
@@ -120,7 +120,7 @@ This will:
 
 3. Reinstall:
    ```bash
-   ./installer.sh
+   ./install.sh
    ```
 
 ## Backup and Restore
